@@ -1,0 +1,11 @@
+Changes
+lib/Plack/Middleware/ParseContent.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+t/00-load.t
+t/01-data.t
+t/boilerplate.t
+t/manifest.t
+t/pod-coverage.t
+t/pod.t
