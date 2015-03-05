@@ -23,7 +23,7 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 
 =head1 SYNOPSIS
@@ -99,20 +99,32 @@ sub call {
 	### Get dat from env
 	my $data;
 
+	my $req = Plack::Request->new($env);
 	if ($method eq 'POST' or $method eq 'PUT') {
-		my $req = Plack::Request->new($env);
+		my $contentType = $req->content_type;
 
 		### Get data for fomr or from body
-		if ($env->{CONTENT_TYPE} eq 'application/x-www-form-urlencoded') {
-			$data = $req->body_parameters;
+		if ($env->{CONTENT_TYPE} =~ /application\/x-www-form-urlencoded/) {
+			my $alldata = $req->body_parameters;
+
+			# Parse encode type from parametr
+			if (exists $alldata->{enctype}){
+				$contentType = delete $alldata->{enctype};
+			}
+			if (exists $alldata->{DATA}){
+				$data = delete $alldata->{DATA};
+			}else{
+				$data = $alldata->as_hashref;
+			}
+
 		} else {
 			$data = $req->content();
 		}
 
 		### Parse data by content-type
 		my $acceptedMimeType;
-		if ($req->content_type){
-			($acceptedMimeType) = grep( exists $Mime_types->{$_} , split(/;/, $req->content_type, 2));
+		if ($contentType){
+			($acceptedMimeType) = grep( exists $Mime_types->{$_} , split(/;/, $contentType, 2));
 		}else{
 			$acceptedMimeType = 'text/plain'; # set default mime type
 		}
@@ -127,6 +139,10 @@ sub call {
 		### Set parsed data to env
 
 		$env->{'restapi.parseddata'} = $parsed if $parsed;
+
+	}elsif ($method eq 'GET'){
+		my $alldata = $req->query_parameters;		
+		$env->{'restapi.parseddata'} = $alldata if $alldata;
 	}
 
 	return $self->app->($env);

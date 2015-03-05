@@ -1,5 +1,7 @@
 Revision history for Plack-Middleware-ParseContent
 
 
+0.02    5. Mar 2015
+        Fixed form parameters.
 0.01    22. Jan 2015
         First version.
