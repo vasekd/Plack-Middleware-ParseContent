@@ -19,11 +19,11 @@ my $make_app = sub {
 		my $env = shift;
 
 		my $test;
-		if ( exists $env->{'restapi.parseddata'} ){
-			if (ref $env->{'restapi.parseddata'} eq 'HASH'){
-				$test = $env->{'restapi.parseddata'}->{test};
+		if ( exists $env->{'parsecontent.data'} ){
+			if (ref $env->{'parsecontent.data'} eq 'HASH'){
+				$test = $env->{'parsecontent.data'}->{test};
 			}else{
-				$test = $env->{'restapi.parseddata'};
+				$test = $env->{'parsecontent.data'};
 			}
 		}
 

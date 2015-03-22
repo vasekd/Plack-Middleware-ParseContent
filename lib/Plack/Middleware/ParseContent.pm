@@ -31,28 +31,23 @@ our $VERSION = '0.02';
 	use Plack::Middleware::ParseContent;
 
 	builder {
-		enable 'ParseContent', xyz => sub{ return {test => $_[0]} };
+		enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[0]) };
 		mount "/" => sub { 
 			my ($env) = @_;
 
-			### Make some action with posted data
-			$env->{'restapi.parseddata'};
-
-			return [ 200, [ 'Content-Type' => 'text/plain' ], [ 'app/root' ] ];
+			return [ 200, [ 'Content-Type' => 'text/plain' ], [ serialize($env->{'parsecontent.data'}) ] ];
 		};
 	};
 
 =head1 DESCRIPTION
 
-Parse input content and save it to plack env as 'restapi.parseddata'.
+Parse input content and save it to plack env as 'parsecontent.data'.
 
 For complete RestAPI in Perl use: 
 
 =over 4
 
-=item * Plack::Middleware::RestAPI
-
-=item * Plack::Middleware::SetAccept
+=item * Plack::App::REST
 
 =item * Plack::Middleware::FormatOutput
 
@@ -102,23 +97,24 @@ sub call {
 	my $req = Plack::Request->new($env);
 	if ($method eq 'POST' or $method eq 'PUT') {
 		my $contentType = $req->content_type;
+		my $content = '';
 
-		### Get data for fomr or from body
+		### Get data for form or from body
 		if ($env->{CONTENT_TYPE} =~ /application\/x-www-form-urlencoded/) {
 			my $alldata = $req->body_parameters;
 
-			# Parse encode type from parametr
+			# Parse encode type from parameters
 			if (exists $alldata->{enctype}){
 				$contentType = delete $alldata->{enctype};
 			}
 			if (exists $alldata->{DATA}){
-				$data = delete $alldata->{DATA};
+				$content = delete $alldata->{DATA};
 			}else{
-				$data = $alldata->as_hashref;
+				$content = $alldata->as_hashref;
 			}
 
 		} else {
-			$data = $req->content();
+			$content = $req->content();
 		}
 
 		### Parse data by content-type
@@ -131,19 +127,16 @@ sub call {
 
 		### Parsed data
 		my $parsed;
-		if ($data && $acceptedMimeType){
-			$parsed = eval {$Mime_types->{$acceptedMimeType}->($data)};
+		if ($content && $acceptedMimeType){
+			$data = eval {$Mime_types->{$acceptedMimeType}->($content)};
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 		}
 
-		### Set parsed data to env
-
-		$env->{'restapi.parseddata'} = $parsed if $parsed;
-
 	}elsif ($method eq 'GET'){
-		my $alldata = $req->query_parameters;		
-		$env->{'restapi.parseddata'} = $alldata if $alldata;
+		$data = $req->query_parameters;		
 	}
+
+	$env->{'parsecontent.data'} = $data if $data;
 
 	return $self->app->($env);
 }
@@ -152,7 +145,7 @@ sub call {
 
 =over 4
 
-=item restapi.parseddata
+=item parsecontent.data
 
 Store parsed data from input content.
 
