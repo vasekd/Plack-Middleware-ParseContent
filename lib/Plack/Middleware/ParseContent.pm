@@ -4,6 +4,8 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
+our $VERSION = '0.01'; # Set automatically by milla
+
 use parent qw( Plack::Middleware );
 
 use Plack::Request;
@@ -12,62 +14,6 @@ use HTTP::Exception '4XX';
 
 use JSON::XS;
 use YAML::Syck;
-
-=head1 NAME
-
-Plack::Middleware::ParseContent - Parse content of input data by Content-Type header.
-
-=head1 VERSION
-
-Version 0.01
-
-=cut
-
-our $VERSION = '0.02';
-
-
-=head1 SYNOPSIS
-
-	use Plack::Middleware::ParseContent;
-
-	builder {
-		enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[0]) };
-		mount "/" => sub { 
-			my ($env) = @_;
-
-			return [ 200, [ 'Content-Type' => 'text/plain' ], [ serialize($env->{'parsecontent.data'}) ] ];
-		};
-	};
-
-=head1 DESCRIPTION
-
-Parse input content and save it to plack env as 'parsecontent.data'.
-
-For complete RestAPI in Perl use: 
-
-=over 4
-
-=item * Plack::App::REST
-
-=item * Plack::Middleware::FormatOutput
-
-=back
-
-=head1 CONSTANTS
-
-=head2 DEFAULT MIME TYPES
-
-=over 4
-
-=item * application/json
-
-=item * text/yaml
-
-=item * text/plain
-
-=back
-
-=cut
 
 my $Mime_types = {
     'application/json'   => sub { &decode_json($_[0]) },
@@ -141,6 +87,58 @@ sub call {
 	return $self->app->($env);
 }
 
+1;
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+Plack::Middleware::ParseContent - Parse content of input data by Content-Type header.
+
+=head1 SYNOPSIS
+
+	use Plack::Middleware::ParseContent;
+
+	builder {
+		enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[0]) };
+		mount "/" => sub { 
+			my ($env) = @_;
+
+			return [ 200, [ 'Content-Type' => 'text/plain' ], [ serialize($env->{'parsecontent.data'}) ] ];
+		};
+	};
+
+=head1 DESCRIPTION
+
+Parse input content and save it to plack env as 'parsecontent.data'.
+
+For complete RestAPI in Perl use: 
+
+=over 4
+
+=item * Plack::App::REST
+
+=item * Plack::Middleware::FormatOutput
+
+=back
+
+=head1 CONSTANTS
+
+=head2 DEFAULT MIME TYPES
+
+=over 4
+
+=item * application/json
+
+=item * text/yaml
+
+=item * text/plain
+
+=back
+
+=cut
+
 =head1 STORED PARAMS TO ENV (Fulfill the PSGI specification)
 
 =over 4
@@ -157,7 +155,7 @@ L<http://psgirestapi.dovrtel.cz/>
 
 =head1 AUTHOR
 
-Vaclav Dovrtel, C<< <vaclav.dovrtel at gmail.com> >>
+Václav Dovrtěl E<lt>vaclav.dovrtel@gmail.comE<gt>
 
 =head1 BUGS
 
@@ -171,16 +169,13 @@ Inspired by L<https://github.com/towhans/hochschober>
 
 L<https://github.com/vasekd/Plack-Middleware-ParseContent>
 
-=head1 LICENSE AND COPYRIGHT
+=head1 COPYRIGHT
 
-Copyright 2015 Vaclav Dovrtel.
+Copyright 2015- Václav Dovrtěl
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
+=head1 LICENSE
 
-See L<http://dev.perl.org/licenses/> for more information.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
-
-1; # End of Plack::Middleware::ParseContent
