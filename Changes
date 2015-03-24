@@ -1,7 +1,13 @@
 Revision history for Plack-Middleware-ParseContent
 
+{{$NEXT}}
+
+0.03  2015-03-24 02:06:27 CET
+		Switched to milla
+		Change env key to parsecontent.data	
 
 0.02    5. Mar 2015
         Fixed form parameters.
+
 0.01    22. Jan 2015
         First version.
