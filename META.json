@@ -67,6 +67,6 @@
          "web" : "https://github.com/vasekd/Plack-Middleware-ParseContent"
       }
    },
-   "version" : "0.03"
+   "version" : "0.04"
 }
 
