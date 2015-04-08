@@ -52,11 +52,12 @@ sub call {
 			# Parse encode type from parameters
 			if (exists $alldata->{enctype}){
 				$contentType = delete $alldata->{enctype};
-			}
-			if (exists $alldata->{DATA}){
-				$content = delete $alldata->{DATA};
+
+				if (exists $alldata->{DATA}){
+					$content = delete $alldata->{DATA};
+				}
 			}else{
-				$content = $alldata->as_hashref;
+				$data = $alldata->as_hashref;
 			}
 
 		} else {
@@ -65,7 +66,7 @@ sub call {
 
 		### Parse data by content-type
 		my $acceptedMimeType;
-		if ($contentType){
+		if ($content && $contentType){
 			($acceptedMimeType) = grep( exists $Mime_types->{$_} , split(/;/, $contentType, 2));
 		}else{
 			$acceptedMimeType = 'text/plain'; # set default mime type
