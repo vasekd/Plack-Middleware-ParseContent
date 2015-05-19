@@ -14,11 +14,36 @@ use HTTP::Exception '4XX';
 
 use JSON::XS;
 use YAML::Syck;
+my $Mime_types;
 
-my $Mime_types = {
+$Mime_types = {
     'application/json'   => sub { &decode_json($_[0]) },
     'text/yaml'          => sub { &YAML::Syck::Load($_[0]) },
     'text/plain'         => sub { $_[0] },
+    'application/x-www-form-urlencoded' => sub {
+    	my ($content, $req) = @_;
+
+		### Get data for form or from body
+		my $alldata = $req->body_parameters;
+		my $data;
+
+		# Parse encode type from parameters
+		if (exists $alldata->{enctype}){
+			my $contentType = delete $alldata->{enctype};
+
+			if (exists $alldata->{DATA}){
+				$content = delete $alldata->{DATA};
+			}
+
+			$data = eval {$Mime_types->{$contentType}->($content, $req)};
+			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
+
+		}else{
+			$data = $alldata->as_hashref;
+		}
+
+		return $data;	
+    }
 };
 
 sub prepare_app {
@@ -43,26 +68,7 @@ sub call {
 	my $req = Plack::Request->new($env);
 	if ($method eq 'POST' or $method eq 'PUT') {
 		my $contentType = $req->content_type;
-		my $content = '';
-
-		### Get data for form or from body
-		if ($env->{CONTENT_TYPE} =~ /application\/x-www-form-urlencoded/) {
-			my $alldata = $req->body_parameters;
-
-			# Parse encode type from parameters
-			if (exists $alldata->{enctype}){
-				$contentType = delete $alldata->{enctype};
-
-				if (exists $alldata->{DATA}){
-					$content = delete $alldata->{DATA};
-				}
-			}else{
-				$data = $alldata->as_hashref;
-			}
-
-		} else {
-			$content = $req->content();
-		}
+		my $content = $req->content();
 
 		### Parse data by content-type
 		my $acceptedMimeType;
@@ -75,7 +81,7 @@ sub call {
 		### Parsed data
 		my $parsed;
 		if ($content && $acceptedMimeType){
-			$data = eval {$Mime_types->{$acceptedMimeType}->($content)};
+			$data = eval {$Mime_types->{$acceptedMimeType}->($content, $req)};
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 		}
 
@@ -135,6 +141,11 @@ For complete RestAPI in Perl use:
 =item * text/yaml
 
 =item * text/plain
+
+=item * application/x-www-form-urlencoded
+	
+	As default two keys are expected: enctype and DATA.
+	"enctype" is definition of type that is serialized in DATA.
 
 =back
 
