@@ -31,6 +31,10 @@ For complete RestAPI in Perl use:
 - application/json
 - text/yaml
 - text/plain
+- application/x-www-form-urlencoded
+
+            As default two keys are expected: enctype and DATA.
+            "enctype" is definition of type that is serialized in DATA.
 
 # STORED PARAMS TO ENV (Fulfill the PSGI specification)
 
