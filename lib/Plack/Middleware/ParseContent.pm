@@ -21,28 +21,43 @@ $Mime_types = {
     'text/yaml'          => sub { &YAML::Syck::Load($_[0]) },
     'text/plain'         => sub { $_[0] },
     'application/x-www-form-urlencoded' => sub {
-    	my ($content, $req) = @_;
 
+   	my ($env, $content, $req) = @_;
 		### Get data for form or from body
 		my $alldata = $req->body_parameters;
-		my $data;
+		my $data ={};
 
 		# Parse encode type from parameters
 		if (exists $alldata->{enctype}){
 			my $contentType = delete $alldata->{enctype};
+			my $format =  delete $alldata->{format};
 
 			if (exists $alldata->{DATA}){
 				$content = delete $alldata->{DATA};
+				$data = eval {$Mime_types->{$contentType}->($content, $req)};
+				HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 			}
+			foreach my $param ( keys %{$alldata} ){
+				if (ref $data eq "HASH" and $param !~ /^query\./){
+					$data->{$param} = $alldata->mixed->{$param};
+					delete $alldata->{$param};
+				}else{
+					my $query_value='';
+					my $outParam = $param;
+					$outParam =~ s/^query\.//;
+					if(ref $alldata->mixed->{$param} eq "ARRAY"){
+						$query_value = "$outParam=" . join "\&$outParam=",@{$alldata->mixed->{$param}};
+					}else{
+						$query_value = "$outParam=" . $alldata->mixed->{$param};
+					}
+					$env->{QUERY_STRING} .= ( $env->{QUERY_STRING} eq ''?'':'&' ) . $query_value;
+					delete $alldata->{$param};
+				}
 
-			$data = eval {$Mime_types->{$contentType}->($content, $req)};
-			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
-
-		}else{
-			$data = $alldata->as_hashref;
+			}
 		}
 
-		return $data;	
+		return $data;
     }
 };
 
@@ -81,7 +96,7 @@ sub call {
 		### Parsed data
 		my $parsed;
 		if ($content && $acceptedMimeType){
-			$data = eval {$Mime_types->{$acceptedMimeType}->($content, $req)};
+			$data = eval {$Mime_types->{$acceptedMimeType}->($env,$content, $req)};
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 		}
 
@@ -90,7 +105,6 @@ sub call {
 	}
 
 	$env->{'parsecontent.data'} = $data if $data;
-
 	return $self->app->($env);
 }
 
