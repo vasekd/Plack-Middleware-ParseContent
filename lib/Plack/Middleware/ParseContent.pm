@@ -19,9 +19,9 @@ my $Mime_types;
 $YAML::Syck::ImplicitUnicode = 1;
 
 $Mime_types = {
-    'application/json'   => sub { &decode_json($_[0]) },
-    'text/yaml'          => sub { &YAML::Syck::Load($_[0]) },
-    'text/plain'         => sub { $_[0] },
+    'application/json'   => sub { &decode_json($_[1]) },
+    'text/yaml'          => sub { &YAML::Syck::Load($_[1]) },
+    'text/plain'         => sub { $_[1] },
     'application/x-www-form-urlencoded' => sub {
 
    	my ($env, $content, $req) = @_;
@@ -36,7 +36,7 @@ $Mime_types = {
 
 			if (exists $alldata->{DATA}){
 				$content = delete $alldata->{DATA};
-				$data = eval {$Mime_types->{$contentType}->($content, $req)};
+				$data = eval {$Mime_types->{$contentType}->($env, $content, $req)};
 				HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 			}
 			foreach my $param ( keys %{$alldata} ){
@@ -98,7 +98,7 @@ sub call {
 		### Parsed data
 		my $parsed;
 		if ($content && $acceptedMimeType){
-			$data = eval {$Mime_types->{$acceptedMimeType}->($env,$content, $req)};
+			$data = eval {$Mime_types->{$acceptedMimeType}->($env, $content, $req)};
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 		}
 
@@ -124,7 +124,7 @@ Plack::Middleware::ParseContent - Parse content of input data by Content-Type he
 	use Plack::Middleware::ParseContent;
 
 	builder {
-		enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[0]) };
+		enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[1]) };
 		mount "/" => sub { 
 			my ($env) = @_;
 

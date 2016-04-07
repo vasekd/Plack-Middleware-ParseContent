@@ -34,7 +34,7 @@ my $make_app = sub {
 my $app1 = $make_app->();
 
 my $app = builder {
-		enable 'ParseContent', xyz => sub{ return {test => $_[0]} };
+		enable 'ParseContent', xyz => sub{ return {test => $_[1]} };
 		mount "/" => $app1
 };
 
