@@ -16,6 +16,8 @@ use JSON::XS;
 use YAML::Syck;
 my $Mime_types;
 
+$YAML::Syck::ImplicitUnicode = 1;
+
 $Mime_types = {
     'application/json'   => sub { &decode_json($_[0]) },
     'text/yaml'          => sub { &YAML::Syck::Load($_[0]) },
