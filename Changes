@@ -2,6 +2,10 @@ Revision history for Plack-Middleware-ParseContent
 
 {{$NEXT}}
 
+0.06  2016-04-08 00:10:07 CEST
+	Mixed post textarea and parameters to QUERY_STRING
+	Fixed utf8 encoding
+
 0.05  2015-05-19 12:57:43 CEST
 	Added application/x-www-form-urlencoded as default mime type.
 

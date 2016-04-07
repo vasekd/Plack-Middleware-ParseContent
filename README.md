@@ -7,7 +7,7 @@ Plack::Middleware::ParseContent - Parse content of input data by Content-Type he
         use Plack::Middleware::ParseContent;
 
         builder {
-                enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[0]) };
+                enable 'ParseContent', 'application/xyz' => sub{ return decode_xyz($_[1]) };
                 mount "/" => sub { 
                         my ($env) = @_;
 
