@@ -24,42 +24,11 @@ $Mime_types = {
     'text/plain'         => sub { $_[1] },
     'application/x-www-form-urlencoded' => sub {
 
-   	my ($env, $content, $req) = @_;
+	   	my ($env, $content, $req) = @_;
+
 		### Get data for form or from body
 		my $alldata = $req->body_parameters;
-		my $data ={};
-
-		# Parse encode type from parameters
-		if (exists $alldata->{enctype}){
-			my $contentType = delete $alldata->{enctype};
-			my $format =  delete $alldata->{format};
-
-			if (exists $alldata->{DATA}){
-				$content = delete $alldata->{DATA};
-				$data = eval {$Mime_types->{$contentType}->($env, $content, $req)};
-				HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
-			}
-			foreach my $param ( keys %{$alldata} ){
-				if (ref $data eq "HASH" and $param !~ /^query\./){
-					$data->{$param} = $alldata->mixed->{$param};
-					delete $alldata->{$param};
-				}else{
-					my $query_value='';
-					my $outParam = $param;
-					$outParam =~ s/^query\.//;
-					if(ref $alldata->mixed->{$param} eq "ARRAY"){
-						$query_value = "$outParam=" . join "\&$outParam=",@{$alldata->mixed->{$param}};
-					}else{
-						$query_value = "$outParam=" . $alldata->mixed->{$param};
-					}
-					$env->{QUERY_STRING} .= ( $env->{QUERY_STRING} eq ''?'':'&' ) . $query_value;
-					delete $alldata->{$param};
-				}
-
-			}
-		}
-
-		return $data;
+		return $alldata;
     }
 };
 
@@ -98,8 +67,39 @@ sub call {
 		### Parsed data
 		my $parsed;
 		if ($content && $acceptedMimeType){
-			$data = eval {$Mime_types->{$acceptedMimeType}->($env, $content, $req)};
+			my $resp = eval {$Mime_types->{$acceptedMimeType}->($env, $content, $req)};
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
+
+			# Parse encode type from parameters
+			if (exists $resp->{enctype}){
+				my $contentType = delete $resp->{enctype};
+				my $format =  delete $resp->{format};
+
+				if (exists $resp->{DATA}){
+					$content = delete $resp->{DATA};
+					$data = eval {$Mime_types->{$contentType}->($env, $content, $req)};
+					HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
+				}
+				foreach my $param ( keys %{$resp} ){
+					if (ref $data eq "HASH" and $param !~ /^query\./){
+						$data->{$param} = $resp->mixed->{$param};
+						delete $resp->{$param};
+					}else{
+						my $query_value='';
+						my $outParam = $param;
+						$outParam =~ s/^query\.//;
+						if(ref $resp->mixed->{$param} eq "ARRAY"){
+							$query_value = "$outParam=" . join "\&$outParam=",@{$resp->mixed->{$param}};
+						}else{
+							$query_value = "$outParam=" . $resp->mixed->{$param};
+						}
+						$env->{QUERY_STRING} .= ( $env->{QUERY_STRING} eq ''?'':'&' ) . $query_value;
+						delete $resp->{$param};
+					}
+
+				}
+			}
+
 		}
 
 	}elsif ($method eq 'GET'){
