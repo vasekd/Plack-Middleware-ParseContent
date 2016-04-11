@@ -71,7 +71,7 @@ sub call {
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 
 			# Parse encode type from parameters
-			if ($resp && exists $resp->{enctype}){
+			if ($resp && ref $resp && exists $resp->{enctype}){
 				my $contentType = delete $resp->{enctype};
 				my $format =  delete $resp->{format};
 
