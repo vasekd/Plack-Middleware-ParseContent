@@ -93,6 +93,7 @@ sub call {
 						}else{
 							$query_value = "$outParam=" . $resp->mixed->{$param};
 						}
+						$data->{$param} = $resp->mixed->{$param};
 						$env->{QUERY_STRING} .= ( $env->{QUERY_STRING} eq ''?'':'&' ) . $query_value;
 						delete $resp->{$param};
 					}
