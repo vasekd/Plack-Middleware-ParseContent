@@ -2,6 +2,9 @@ Revision history for Plack-Middleware-ParseContent
 
 {{$NEXT}}
 
+0.08  2016-04-11 15:30:06 CEST
+	Fixed params in request
+
 0.07  2016-04-09 18:48:39 CEST
 	Added enctype for all mime-types
 

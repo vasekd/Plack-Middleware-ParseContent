@@ -4,7 +4,7 @@ use 5.006;
 use strict;
 use warnings FATAL => 'all';
 
-our $VERSION = '0.07'; # Set automatically by milla
+our $VERSION = '0.08'; # Set automatically by milla
 
 use parent qw( Plack::Middleware );
 
