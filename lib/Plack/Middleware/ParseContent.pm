@@ -71,7 +71,7 @@ sub call {
 			HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 
 			# Parse encode type from parameters
-			if ($resp && ref $resp && exists $resp->{enctype}){
+			if ($resp && (ref $resp) =~ /^HASH/i && exists $resp->{enctype}){
 				my $contentType = delete $resp->{enctype};
 				my $format =  delete $resp->{format};
 
@@ -81,7 +81,7 @@ sub call {
 					HTTP::Exception::400->throw(status_message => "Parser error: $@") if $@;
 				}
 				foreach my $param ( keys %{$resp} ){
-					if (ref $data eq "HASH" and $param !~ /^query\./){
+					if ( (ref $data) =~ /^HASH/i && $param !~ /^query\./){
 						$data->{$param} = $resp->mixed->{$param};
 						delete $resp->{$param};
 					}else{
@@ -97,12 +97,13 @@ sub call {
 						$env->{QUERY_STRING} .= ( $env->{QUERY_STRING} eq ''?'':'&' ) . $query_value;
 						delete $resp->{$param};
 					}
-
 				}
 			}else{
 				$data = $resp;
 			}
-
+			if ($data && (ref $data eq 'Hash::MultiValue')){
+				$data = $data->mixed;
+			}
 		}
 
 	}elsif ($method eq 'GET'){
